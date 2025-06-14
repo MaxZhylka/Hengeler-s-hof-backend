@@ -19,7 +19,7 @@ public class AuthDomainService(AppDbContext context) : IAuthDomainService
       throw new ArgumentException("Password cannot be empty.");
 
     if (await _context.Users
-        .AnyAsync(u => u.Email != null && u.Email.Equals(email, StringComparison.CurrentCultureIgnoreCase)))
+        .AnyAsync(u => u.Email != null && EF.Functions.ILike(u.Email, email)))
     {
       throw new InvalidOperationException("Email is already taken.");
     }
@@ -49,8 +49,7 @@ public class AuthDomainService(AppDbContext context) : IAuthDomainService
       throw new ArgumentException("Email must be provided", nameof(email));
 
     var existingUser = await _context.Users
-        .AsNoTracking()
-        .FirstOrDefaultAsync(u => u.Email == email);
+        .FirstOrDefaultAsync(u => u.Email != null && EF.Functions.ILike(u.Email, email));
 
     if (existingUser != null)
     {
@@ -108,7 +107,7 @@ public class AuthDomainService(AppDbContext context) : IAuthDomainService
     if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
       throw new ArgumentException("Email and password must be provided.");
 
-    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new InvalidOperationException("Invalid email or password.");
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email != null && EF.Functions.ILike(u.Email, email)) ?? throw new InvalidOperationException("Invalid email or password.");
 
     if (user.SocialLogin)
       throw new InvalidOperationException("User has logged in via social login and cannot use password authentication.");
