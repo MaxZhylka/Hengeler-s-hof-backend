@@ -5,6 +5,7 @@ using Hengeler.Domain.Enums;
 using Hengeler.Domain.Interfaces;
 using Hengeler.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
 
 namespace Hengeler.Domain.Services;
 
@@ -17,10 +18,13 @@ public class AuthDomainService(AppDbContext context) : IAuthDomainService
     if (string.IsNullOrWhiteSpace(password))
       throw new ArgumentException("Password cannot be empty.");
 
-    if (await _context.Users.AnyAsync(u => u.Email == email))
+    if (await _context.Users
+        .AnyAsync(u => u.Email != null && u.Email.Equals(email, StringComparison.CurrentCultureIgnoreCase)))
+    {
       throw new InvalidOperationException("Email is already taken.");
+    }
 
-    var hash = HashPassword(password);
+    var hash = BCrypt.Net.BCrypt.HashPassword(password);
 
     var user = new User(
       id: Guid.NewGuid(),
@@ -39,10 +43,10 @@ public class AuthDomainService(AppDbContext context) : IAuthDomainService
     return user;
   }
 
-public async Task<User> CreateSocialUserAsync(string username, string? email, string? profilePictureUrl = null)
-{
+  public async Task<User> CreateSocialUserAsync(string username, string? email, string? profilePictureUrl = null)
+  {
     if (string.IsNullOrWhiteSpace(email))
-        throw new ArgumentException("Email must be provided", nameof(email));
+      throw new ArgumentException("Email must be provided", nameof(email));
 
     var existingUser = await _context.Users
         .AsNoTracking()
@@ -50,26 +54,26 @@ public async Task<User> CreateSocialUserAsync(string username, string? email, st
 
     if (existingUser != null)
     {
-        if (existingUser.ProfilePictureUrl != profilePictureUrl)
-        {
-            var updatedUser = new User(
-                id: existingUser.Id,
-                username: existingUser.Username,
-                email: existingUser.Email,
-                role: existingUser.Role,
-                socialLogin: existingUser.SocialLogin,
-                phoneNumber: existingUser.PhoneNumber,
-                passwordHash: existingUser.PasswordHash,
-                profilePictureUrl: profilePictureUrl
-            );
+      if (existingUser.ProfilePictureUrl != profilePictureUrl)
+      {
+        var updatedUser = new User(
+            id: existingUser.Id,
+            username: existingUser.Username,
+            email: existingUser.Email,
+            role: existingUser.Role,
+            socialLogin: existingUser.SocialLogin,
+            phoneNumber: existingUser.PhoneNumber,
+            passwordHash: existingUser.PasswordHash,
+            profilePictureUrl: profilePictureUrl
+        );
 
-            _context.Users.Update(updatedUser);
-            await _context.SaveChangesAsync();
+        _context.Users.Update(updatedUser);
+        await _context.SaveChangesAsync();
 
-            return updatedUser;
-        }
+        return updatedUser;
+      }
 
-        return existingUser;
+      return existingUser;
     }
 
     var newUser = new User(
@@ -87,7 +91,7 @@ public async Task<User> CreateSocialUserAsync(string username, string? email, st
     await _context.SaveChangesAsync();
 
     return newUser;
-}
+  }
 
   public async Task<User?> GetUserByIdAsync(Guid userId)
   {
@@ -109,29 +113,9 @@ public async Task<User> CreateSocialUserAsync(string username, string? email, st
     if (user.SocialLogin)
       throw new InvalidOperationException("User has logged in via social login and cannot use password authentication.");
 
-    var hash = HashPassword(password);
-
-    if (hash != user.PasswordHash)
+    if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
       throw new InvalidOperationException("Invalid email or password.");
 
     return user;
-  }
-
-  public async Task<bool> VerifyPasswordAsync(string username, string plainPassword)
-  {
-    var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
-    if (user == null || user.PasswordHash == null)
-      return false;
-
-    var hash = HashPassword(plainPassword);
-    return hash == user.PasswordHash;
-  }
-
-  private string HashPassword(string password)
-  {
-    using var sha256 = SHA256.Create();
-    var bytes = Encoding.UTF8.GetBytes(password);
-    var hashBytes = sha256.ComputeHash(bytes);
-    return Convert.ToBase64String(hashBytes);
   }
 }

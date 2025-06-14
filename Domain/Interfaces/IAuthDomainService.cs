@@ -15,7 +15,5 @@ namespace Hengeler.Domain.Interfaces
     Task<User?> GetUserByEmailAsync(string email);
 
     Task<User> LoginAsync(string email, string password);
-
-    Task<bool> VerifyPasswordAsync(string username, string plainPassword);
   }
 }
