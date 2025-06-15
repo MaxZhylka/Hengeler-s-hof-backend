@@ -27,34 +27,6 @@ if (string.IsNullOrEmpty(nextAuthSecret))
     throw new Exception("NextAuth secret is not configured");
 }
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(options =>
-{
-    Console.WriteLine(nextAuthSecret);
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(nextAuthSecret)),
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromMinutes(1) 
-    };
-
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var token = context.Request.Cookies["authjs.session-token"];
-            if (!string.IsNullOrEmpty(token))
-            {
-                context.Token = token;
-            }
-            return Task.CompletedTask;
-        }
-    };
-});
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -81,9 +53,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.MapControllers();
 app.UseMiddleware<JweAuthenticationMiddleware>();
 app.UseAuthorization();
+app.MapControllers();
 app.Run();
 
 
