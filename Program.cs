@@ -1,10 +1,13 @@
+using System.Text;
 using Hengeler.API.Middleware;
 using Hengeler.Application.Interfaces;
 using Hengeler.Application.Services;
 using Hengeler.Domain.Interfaces;
 using Hengeler.Domain.Services;
 using Hengeler.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +20,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
+
+var nextAuthSecret = builder.Configuration["NextAuth:Secret"];
+if (string.IsNullOrEmpty(nextAuthSecret))
+{
+    throw new Exception("NextAuth secret is not configured");
+}
 
 builder.Services.AddCors(options =>
 {
@@ -44,7 +53,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.MapControllers(); 
+app.UseMiddleware<JweAuthenticationMiddleware>();
+app.UseAuthorization();
+app.MapControllers();
 app.Run();
 
 
