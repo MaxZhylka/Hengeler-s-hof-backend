@@ -1,3 +1,4 @@
+using Hengeler.API.Middleware;
 using Hengeler.Application.Interfaces;
 using Hengeler.Application.Services;
 using Hengeler.Domain.Interfaces;
@@ -42,6 +43,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapControllers(); 
 app.Run();
 
