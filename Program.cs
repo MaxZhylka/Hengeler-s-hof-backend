@@ -1,13 +1,12 @@
-using System.Text;
 using Hengeler.API.Middleware;
 using Hengeler.Application.Interfaces;
 using Hengeler.Application.Services;
+using Hengeler.Domain.Entities;
 using Hengeler.Domain.Interfaces;
 using Hengeler.Domain.Services;
 using Hengeler.Infrastructure;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +14,41 @@ builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthDomainService, AuthDomainService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBookingDomainService, BookingDomainService>();
+builder.Services.AddScoped<IEmailDomainService>(sp =>
+{
+    var config = builder.Configuration.GetSection("EmailSettings");
+    EmailSettings emailOptions = new()
+    {
+        SmtpServer = config["SmtpServer"]!,
+        Port = int.Parse(config["Port"]!),
+        SenderName = config["SenderName"]!,
+        SenderEmail = config["SenderEmail"]!,
+        Username = config["Username"]!,
+        Password = config["Password"]!
+    };
+    return new EmailDomainService(emailOptions);
+
+});
+
+builder.Services.AddScoped<IBookingService>(sp =>
+{
+    var config = builder.Configuration.GetSection("Stripe");
+    var bookingDomainService = sp.GetRequiredService<IBookingDomainService>();
+    var emailDomainService = sp.GetRequiredService<IEmailDomainService>();
+    var authDomainService = sp.GetRequiredService<IAuthDomainService>();
+    return new BookingService(
+        config["ApiKey"]!,
+        config["SuccessUrl"]!,
+        config["CancelUrl"]!,
+        config["WebhookSecret"]!,
+        emailDomainService,
+        authDomainService,
+        bookingDomainService
+    );
+});
+
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
