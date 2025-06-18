@@ -12,11 +12,14 @@ public class JweAuthenticationMiddleware
   private readonly byte[] _derivedKey;
 
   private const int HkdfOutputKeyLength = 64;
-  private const string DefaultCookieName = "authjs.session-token";
+  private readonly string  DefaultCookieName;
 
-  public JweAuthenticationMiddleware(RequestDelegate next, IConfiguration configuration)
+  public JweAuthenticationMiddleware(RequestDelegate next, IConfiguration configuration, IWebHostEnvironment env)
   {
     _next = next;
+    
+    DefaultCookieName = env.IsDevelopment() ? "authjs.session-token" : "__Secure-authjs.session-token";
+
     _secret = configuration["NextAuth:Secret"] ?? throw new Exception("NextAuth:Secret is not configured");
 
     byte[] ikm = Encoding.UTF8.GetBytes(_secret);
