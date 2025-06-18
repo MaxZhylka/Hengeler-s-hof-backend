@@ -1,4 +1,5 @@
 
+using System.ComponentModel.DataAnnotations;
 using Hengeler.Domain.Enums;
 
 namespace Hengeler.Domain.Entities
