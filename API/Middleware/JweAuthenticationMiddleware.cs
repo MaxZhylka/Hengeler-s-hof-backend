@@ -68,7 +68,7 @@ public class JweAuthenticationMiddleware
 
   public async Task Invoke(HttpContext context)
   {
-    var token = context.Request.Cookies["authjs.session-token"];
+    var token = context.Request.Cookies[DefaultCookieName];
 
     if (!string.IsNullOrEmpty(token))
     {
@@ -111,7 +111,7 @@ public class JweAuthenticationMiddleware
       }
       catch (Exception ex)
       {
-
+        Console.WriteLine($"Failed to decrypt JWE token: {ex.Message}");
       }
     }
 
