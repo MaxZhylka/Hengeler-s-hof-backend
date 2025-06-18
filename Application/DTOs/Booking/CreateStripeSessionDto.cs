@@ -16,7 +16,7 @@ public class CreateStripeSessionDto
   public DateTime StartDate { get; set; }
   public DateTime EndDate { get; set; }
 
-  public bool MoreThanTwoPats { get; set; }
+  public bool MoreThanTwoPets { get; set; }
 
   public bool WholeHouse { get; set; } = false;
 

@@ -10,44 +10,34 @@ public class BookingDomainService(
   AppDbContext dbContext
 ) : IBookingDomainService
 {
-  public async Task<Booking> CreatePendingBookingAsync(CreateStripeSessionDto dto)
+  public async Task<Booking> CreatePendingBookingAsync(Booking booking)
   {
     await dbContext.Bookings
-.Where(b => b.Status == BookingStatus.Pending && b.ExpiresAt != null && b.ExpiresAt < DateTime.UtcNow)
-.ExecuteDeleteAsync();
+    .Where(b => b.Status == BookingStatus.Pending && b.ExpiresAt != null && b.ExpiresAt < DateTime.UtcNow)
+    .ExecuteDeleteAsync();
 
     using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
-    var isFree = await IsFreeAsync(dto.RoomId, dto.StartDate, dto.EndDate);
+    var isFree = await IsFreeAsync(booking.RoomId, booking.StartDate, booking.EndDate, booking.WholeHouse);
     if (!isFree) throw new InvalidOperationException("Room is already booked.");
-
-    var booking = new Booking(
-      price: dto.Price,
-      numberOfDays: dto.NumberOfDays,
-      roomId: dto.RoomId,
-      userId: dto.UserId,
-      status: BookingStatus.Pending,
-      startDate: dto.StartDate,
-      endDate: dto.EndDate,
-      moreThanTwoPats: dto.MoreThanTwoPats,
-      expiresAt: DateTime.UtcNow.AddMinutes(30)
-    );
 
     dbContext.Bookings.Add(booking);
     await dbContext.SaveChangesAsync();
     await transaction.CommitAsync();
     return booking;
   }
-  public async Task<bool> IsFreeAsync(string roomId, DateTime startDate, DateTime endDate)
-  {
-    return !await dbContext.Bookings
-      .AnyAsync(b =>
-        (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Pending || b.Status == BookingStatus.ClosedByAdmin) &&
-        (b.RoomId == roomId || b.WholeHouse) &&
-        b.StartDate < endDate &&
-        b.EndDate > startDate
-      );
-  }
+public async Task<bool> IsFreeAsync(string roomId, DateTime startDate, DateTime endDate, bool wholeHouse)
+{
+  return !await dbContext.Bookings.AnyAsync(b =>
+    (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Pending || b.Status == BookingStatus.ClosedByAdmin) &&
+    (
+      wholeHouse || b.RoomId == roomId || b.WholeHouse
+    ) &&
+    b.StartDate < endDate &&
+    b.EndDate > startDate
+  );
+}
+
 
   public async Task<Booking> BookAsync(Guid bookingId)
   {
@@ -79,8 +69,12 @@ public class BookingDomainService(
   }
 
 
-  public async Task<List<BookingDto>> GetBookings()
+  public async Task<List<BookingDto>> GetBookingsAsync()
   {
+    await dbContext.Bookings
+    .Where(b => b.Status == BookingStatus.Pending && b.ExpiresAt != null && b.ExpiresAt < DateTime.UtcNow)
+    .ExecuteDeleteAsync();
+
     return await dbContext.Bookings
       .Where(b => b.EndDate >= DateTime.UtcNow)
       .Include(b => b.User)
@@ -90,10 +84,10 @@ public class BookingDomainService(
         RoomId = b.RoomId,
         StartDate = b.StartDate,
         EndDate = b.EndDate,
-        Status = b.Status.ToString(),
-        StripeSessionId = null,
-        PaymentIntentId = null,
-        CustomerEmail = b.User.Email
+        Status = b.Status,
+        CustomerEmail = b.User!.Email,
+        CustomerPhone = b.User.PhoneNumber,
+        CustomerName = b.User.Username
       })
       .ToListAsync();
   }

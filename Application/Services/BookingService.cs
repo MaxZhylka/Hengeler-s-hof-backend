@@ -8,12 +8,12 @@ using Stripe.Checkout;
 
 namespace Hengeler.Application.Services;
 
-public class BookingService(string stripeApiKey, string successUrl, string cancelUrl, string WebhookSecret, IEmailDomainService emailService, IAuthDomainService authService, IBookingDomainService bookingDomainService) : IBookingService
+public class BookingService(string stripeApiKey, string successUrl, string cancelUrl, string webhookSecret, IEmailDomainService emailService, IAuthDomainService authService, IBookingDomainService bookingDomainService) : IBookingService
 {
   private readonly string _stripeApiKey = stripeApiKey;
   private readonly string _successUrl = successUrl;
   private readonly string _cancelUrl = cancelUrl;
-  private readonly string _webhookSecret = WebhookSecret;
+  private readonly string _webhookSecret = webhookSecret;
   private readonly IAuthDomainService _authService = authService;
   private readonly IEmailDomainService _emailService = emailService;
 
@@ -21,19 +21,32 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
   public async Task<string> CreateStripeSessionAsync(CreateStripeSessionDto createStripeSessionDto)
   {
 
-    var booking = await _bookingDomainService.CreatePendingBookingAsync(createStripeSessionDto);
-
-    StripeConfiguration.ApiKey = _stripeApiKey;
-    var options = new SessionCreateOptions
+    var booking = await _bookingDomainService.CreatePendingBookingAsync(new Booking
+    (
+      createStripeSessionDto.Price,
+      createStripeSessionDto.NumberOfDays,
+      createStripeSessionDto.RoomId,
+      createStripeSessionDto.UserId,
+      BookingStatus.Pending,
+      createStripeSessionDto.StartDate,
+      createStripeSessionDto.EndDate,
+      createStripeSessionDto.MoreThanTwoPets,
+      DateTime.UtcNow.AddMinutes(30),
+      createStripeSessionDto.WholeHouse
+    ));
+    try
     {
-      PaymentMethodTypes = ["card"],
-      Mode = "payment",
-      SuccessUrl = _successUrl,
-      CancelUrl = _cancelUrl,
-      ExpiresAt = DateTime.UtcNow.AddMinutes(30),
-      LineItems =
-      [
-        new SessionLineItemOptions
+      StripeConfiguration.ApiKey = _stripeApiKey;
+      var options = new SessionCreateOptions
+      {
+        PaymentMethodTypes = ["card"],
+        Mode = "payment",
+        SuccessUrl = _successUrl,
+        CancelUrl = _cancelUrl,
+        ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+        LineItems =
+        [
+          new SessionLineItemOptions
         {
           PriceData = new SessionLineItemPriceDataOptions
           {
@@ -47,24 +60,30 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
           },
           Quantity = 1
         }
-      ],
-      Metadata = new Dictionary<string, string>
+        ],
+        Metadata = new Dictionary<string, string>
       {
         { "BookingId", booking.Id.ToString() },
         { "RoomId", createStripeSessionDto.RoomId },
         { "UserId", createStripeSessionDto.UserId.ToString() },
-        { "MoreThanTwoPats", createStripeSessionDto.MoreThanTwoPats.ToString() },
+        { "MoreThanTwoPets", createStripeSessionDto.MoreThanTwoPets.ToString() },
         { "WholeHouse", createStripeSessionDto.WholeHouse.ToString() },
         { "Price", createStripeSessionDto.Price.ToString() },
         { "NumberOfDays", createStripeSessionDto.NumberOfDays.ToString() },
         { "startDate", createStripeSessionDto.StartDate.ToString("o") },
         { "endDate", createStripeSessionDto.EndDate.ToString("o") }
       }
-    };
+      };
 
-    var service = new SessionService();
-    var session = await service.CreateAsync(options);
-    return session.Id;
+      var service = new SessionService();
+      var session = await service.CreateAsync(options);
+      return session.Id;
+    }
+    catch (StripeException ex)
+    {
+      Console.WriteLine($"Stripe error: {ex.Message}");
+      throw new Exception("Failed to create Stripe session. Please try again later.");
+    }
   }
 
 
@@ -89,17 +108,20 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
           try
           {
             User user = await _authService.GetUserByIdAsync(booking.UserId) ?? throw new Exception("User not found");
-            _ = _emailService.SendSuccessPaymentEmailAsync(user.Email, new CreateStripeSessionDto
-            {
-              Price = booking.Price,
-              NumberOfDays = booking.NumberOfDays,
-              RoomId = booking.RoomId,
-              UserId = booking.UserId,
-              StartDate = booking.StartDate,
-              EndDate = booking.EndDate,
-              MoreThanTwoPats = booking.MoreThanTwoPats,
-              WholeHouse = booking.WholeHouse
-            });
+            _ = _emailService.SendSuccessPaymentEmailAsync(user.Email ?? throw new Exception("User don't have email"), new Booking
+            (
+              booking.Id,
+              booking.Price,
+              booking.NumberOfDays,
+              booking.RoomId,
+              booking.UserId,
+              booking.Status,
+              booking.StartDate,
+              booking.EndDate,
+              booking.MoreThanTwoPets,
+              booking.ExpiresAt,
+              booking.WholeHouse
+            ));
           }
           catch (Exception ex)
           {
@@ -114,7 +136,7 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
             && Guid.TryParse(userIdStr, out var userId))
             {
               User user = await _authService.GetUserByIdAsync(userId) ?? throw new Exception("User not found");
-              _ = _emailService.SendFailedPaymentEmailAsync(user.Email);
+              _ = _emailService.SendFailedPaymentEmailAsync(user.Email ?? throw new Exception("User don't have email"));
             }
 
           }
@@ -137,6 +159,6 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
 
   public async Task<List<BookingDto>> GetBookingsAsync()
   {
-    return await _bookingDomainService.GetBookings();
+    return await _bookingDomainService.GetBookingsAsync();
   }
 }
