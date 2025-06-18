@@ -31,10 +31,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasMaxLength(100);
       entity.Property(e => e.Status)
             .IsRequired();
-      entity.ToTable(t =>
-      {
-        t.HasCheckConstraint("CK_Booking_ValidDateRange", "[StartDate] <= [EndDate]");
-      });
     });
   }
 
