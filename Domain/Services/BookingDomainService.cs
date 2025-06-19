@@ -26,17 +26,17 @@ public class BookingDomainService(
     await transaction.CommitAsync();
     return booking;
   }
-public async Task<bool> IsFreeAsync(string roomId, DateTime startDate, DateTime endDate, bool wholeHouse)
-{
-  return !await dbContext.Bookings.AnyAsync(b =>
-    (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Pending || b.Status == BookingStatus.ClosedByAdmin) &&
-    (
-      wholeHouse || b.RoomId == roomId || b.WholeHouse
-    ) &&
-    b.StartDate < endDate &&
-    b.EndDate > startDate
-  );
-}
+  public async Task<bool> IsFreeAsync(string roomId, DateOnly startDate, DateOnly endDate, bool wholeHouse)
+  {
+    return !await dbContext.Bookings.AnyAsync(b =>
+      (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Pending || b.Status == BookingStatus.ClosedByAdmin) &&
+      (
+        wholeHouse || b.RoomId == roomId || b.WholeHouse
+      ) &&
+      b.StartDate < endDate &&
+      b.EndDate > startDate
+    );
+  }
 
 
   public async Task<Booking> BookAsync(Guid bookingId)
@@ -76,7 +76,7 @@ public async Task<bool> IsFreeAsync(string roomId, DateTime startDate, DateTime 
     .ExecuteDeleteAsync();
 
     return await dbContext.Bookings
-      .Where(b => b.EndDate >= DateTime.UtcNow)
+      .Where(b => b.EndDate >= DateOnly.FromDateTime(DateTime.UtcNow))
       .Include(b => b.User)
       .Select(b => new BookingDto
       {
@@ -87,8 +87,26 @@ public async Task<bool> IsFreeAsync(string roomId, DateTime startDate, DateTime 
         Status = b.Status,
         CustomerEmail = b.User!.Email,
         CustomerPhone = b.User.PhoneNumber,
-        CustomerName = b.User.Username
+        CustomerName = b.User.Username,
+        StripeId = b.StripeId,
+        MoreThanTwoPets = b.MoreThanTwoPets,
+        UserId = b.UserId,
       })
       .ToListAsync();
+  }
+
+  public async Task<Booking> UpdateBookingStripeIdAsync(Guid bookingId, string stripeId)
+  {
+    if (string.IsNullOrWhiteSpace(stripeId))
+      throw new ArgumentException("StripeId cannot be null or empty.", nameof(stripeId));
+
+    var booking = await dbContext.Bookings
+      .AsTracking()
+      .FirstOrDefaultAsync(b => b.Id == bookingId)
+      ?? throw new InvalidOperationException("Booking not found.");
+
+    booking.StripeId = stripeId;
+    await dbContext.SaveChangesAsync();
+    return booking;
   }
 }

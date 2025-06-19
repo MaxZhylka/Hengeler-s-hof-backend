@@ -20,10 +20,10 @@ public class Booking
   public Guid UserId { get; set; } = Guid.Empty;
 
   [Required]
-  public DateTime StartDate { get; set; }
+  public DateOnly StartDate { get; set; }
 
   [Required]
-  public DateTime EndDate { get; set; }
+  public DateOnly EndDate { get; set; }
 
   public bool MoreThanTwoPets { get; set; }
 
@@ -38,6 +38,8 @@ public class Booking
 
   public User? User { get; set; }
 
+  public string? StripeId { get; set; }
+
   protected Booking() { }
 
   public Booking(
@@ -47,11 +49,12 @@ public class Booking
     string roomId,
     Guid userId,
     BookingStatus status,
-    DateTime startDate,
-    DateTime endDate,
+    DateOnly startDate,
+    DateOnly endDate,
     bool moreThanTwoPets,
     DateTime? expiresAt = null,
-    bool wholeHouse = false
+    bool wholeHouse = false,
+    string? stripeId = null
   )
   {
     Id = id;
@@ -59,6 +62,7 @@ public class Booking
     NumberOfDays = numberOfDays;
     RoomId = roomId;
     UserId = userId;
+    StripeId = stripeId;
     StartDate = startDate;
     EndDate = endDate;
     Status = status;
@@ -73,20 +77,22 @@ public class Booking
   string roomId,
   Guid userId,
   BookingStatus status,
-  DateTime startDate,
-  DateTime endDate,
+  DateOnly startDate,
+  DateOnly endDate,
   bool moreThanTwoPets,
   DateTime? expiresAt = null,
-  bool wholeHouse = false
+  bool wholeHouse = false,
+  string? stripeId = null
 )
   {
-    Id = new Guid();
+    Id = Guid.NewGuid();
     Price = price;
     NumberOfDays = numberOfDays;
     RoomId = roomId;
     UserId = userId;
     StartDate = startDate;
     EndDate = endDate;
+    StripeId = stripeId;
     Status = status;
     MoreThanTwoPets = moreThanTwoPets;
     ExpiresAt = expiresAt;
