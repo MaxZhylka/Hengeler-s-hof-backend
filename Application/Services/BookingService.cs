@@ -77,7 +77,15 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
 
       var service = new SessionService();
       var session = await service.CreateAsync(options);
-      await _bookingDomainService.UpdateBookingStripeIdAsync(booking.Id, session.Id);
+      try
+      {
+        await _bookingDomainService.UpdateBookingStripeIdAsync(booking.Id, session.Id);
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error updating booking with Stripe ID: {ex.Message}");
+      }
+
       return session.Id;
     }
     catch (StripeException ex)

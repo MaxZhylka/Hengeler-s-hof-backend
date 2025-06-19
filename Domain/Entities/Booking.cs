@@ -85,7 +85,7 @@ public class Booking
   string? stripeId = null
 )
   {
-    Id = new Guid();
+    Id = Guid.NewGuid();
     Price = price;
     NumberOfDays = numberOfDays;
     RoomId = roomId;

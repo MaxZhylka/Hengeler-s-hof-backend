@@ -97,6 +97,9 @@ public class BookingDomainService(
 
   public async Task<Booking> UpdateBookingStripeIdAsync(Guid bookingId, string stripeId)
   {
+    if (string.IsNullOrWhiteSpace(stripeId))
+      throw new ArgumentException("StripeId cannot be null or empty.", nameof(stripeId));
+
     var booking = await dbContext.Bookings
       .AsTracking()
       .FirstOrDefaultAsync(b => b.Id == bookingId)
