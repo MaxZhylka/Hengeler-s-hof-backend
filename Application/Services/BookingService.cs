@@ -77,6 +77,7 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
 
       var service = new SessionService();
       var session = await service.CreateAsync(options);
+      await _bookingDomainService.UpdateBookingStripeIdAsync(booking.Id, session.Id);
       return session.Id;
     }
     catch (StripeException ex)

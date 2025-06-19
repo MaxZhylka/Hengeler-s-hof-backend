@@ -13,8 +13,8 @@ public class CreateStripeSessionDto
   public string RoomId { get; set; }
   [Required]
   public Guid UserId { get; set; }
-  public DateTime StartDate { get; set; }
-  public DateTime EndDate { get; set; }
+  public DateOnly StartDate { get; set; }
+  public DateOnly EndDate { get; set; }
 
   public bool MoreThanTwoPets { get; set; }
 
