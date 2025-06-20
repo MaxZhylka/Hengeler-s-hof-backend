@@ -1,10 +1,12 @@
 using Hengeler.API.Middleware;
 using Hengeler.Application.Interfaces;
 using Hengeler.Application.Services;
+using Hengeler.Domain;
 using Hengeler.Domain.Entities;
 using Hengeler.Domain.Interfaces;
 using Hengeler.Domain.Services;
 using Hengeler.Infrastructure;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -19,6 +21,11 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthDomainService, AuthDomainService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingDomainService, BookingDomainService>();
+builder.Services.AddScoped<IContactDomainService, ContactDomainService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddAuthentication("jwe")
+    .AddScheme<AuthenticationSchemeOptions, DummyAuthHandler>("jwe", null);
+
 builder.Services.AddScoped<IEmailDomainService>(sp =>
 {
     var config = builder.Configuration.GetSection("EmailSettings");
@@ -92,6 +99,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<JweAuthenticationMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
