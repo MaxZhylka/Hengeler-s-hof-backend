@@ -66,6 +66,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
+builder.Services.AddScoped<ContactSeeder>();
+
 var nextAuthSecret = builder.Configuration["NextAuth:Secret"];
 if (string.IsNullOrEmpty(nextAuthSecret))
 {
@@ -85,6 +87,12 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<ContactSeeder>();
+    await seeder.SeedAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
