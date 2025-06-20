@@ -38,6 +38,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
       statusCode = (int)statusCode
     });
 
+    Console.WriteLine(message);
     return context.Response.WriteAsync(result);
   }
 }

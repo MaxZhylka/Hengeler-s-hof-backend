@@ -9,6 +9,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
   public DbSet<User> Users { get; set; } = null!;
   public DbSet<Booking> Bookings { get; set; } = null!;
 
+  public DbSet<Contact> Contacts { get; set; } = null!;
+
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     modelBuilder.Entity<User>(entity =>
