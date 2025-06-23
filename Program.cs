@@ -23,6 +23,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingDomainService, BookingDomainService>();
 builder.Services.AddScoped<IContactDomainService, ContactDomainService>();
 builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<ITranslationDomainService, TranslationDomainService>();
+builder.Services.AddScoped<ITranslationService, TranslationService>();
+builder.Services.AddScoped<IEventDomainService, EventDomainService>();
+builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddAuthentication("jwe")
     .AddScheme<AuthenticationSchemeOptions, DummyAuthHandler>("jwe", null);
 
@@ -85,7 +89,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.WebHost.UseWebRoot("wwwroot");
 builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -110,6 +116,7 @@ app.UseMiddleware<JweAuthenticationMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.UseStaticFiles();
 app.Run();
 
 
