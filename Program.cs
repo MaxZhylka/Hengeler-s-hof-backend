@@ -117,6 +117,7 @@ app.UseMiddleware<JweAuthenticationMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.UseStaticFiles();
 app.Run();
 
 
