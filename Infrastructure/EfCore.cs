@@ -8,7 +8,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
   public DbSet<User> Users { get; set; } = null!;
   public DbSet<Booking> Bookings { get; set; } = null!;
-
+  public DbSet<Translations> Translations { get; set; } = null!;
+  public DbSet<Event> Events { get; set; } = null!;
   public DbSet<Contact> Contacts { get; set; } = null!;
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
