@@ -87,8 +87,7 @@ public class EventService(
             Directory.CreateDirectory(imagePath);
 
         var fullPath = Path.Combine(imagePath, imageName);
-        Console.WriteLine("PATH: " + imagePath);
-        Console.WriteLine("FULL PATH: " + fullPath);
+
         await using var stream = new FileStream(fullPath, FileMode.Create);
         await image.CopyToAsync(stream, cancellationToken);
 
