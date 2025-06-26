@@ -48,8 +48,8 @@ public class SlidesController(ISlideService slideService, IConfiguration configu
     var dto = new SlideUpdateDto
     {
       Id = Guid.Parse(model.Id),
-      TitleKey = Guid.Parse(model.TitleKey),
-      DescriptionKey = Guid.Parse(model.DescriptionKey),
+      TitleKey = Guid.TryParse(model.TitleKey, out var titleId) ? titleId : null,
+      DescriptionKey = Guid.TryParse(model.DescriptionKey, out var descId) ? descId : null,
       UkTitle = model.UkTitle,
       EnTitle = model.EnTitle,
       DeTitle = model.DeTitle,

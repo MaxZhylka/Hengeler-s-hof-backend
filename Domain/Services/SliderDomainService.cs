@@ -20,8 +20,10 @@ public class SliderDomainService(AppDbContext context) : ISliderDomainService
       var slides = await _context.Slides
           .Where(s => slider.SlideIds.Contains(s.Id))
           .ToListAsync();
+      
+      var slidesById = slides.ToDictionary(s => s.Id);
 
-      slider.Slides = slides;
+      slider.Slides = [.. slider.SlideIds.Select(id => slides.First(s => s.Id == id))];
     }
     else
     {

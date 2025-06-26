@@ -18,24 +18,36 @@ public class BookingDomainService(
 
     using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
+    int price = await CalculatePriceAsync(booking.RoomId, booking.StartDate, booking.EndDate);
+    if (booking.RoomId == "house") booking.WholeHouse = true;
     var isFree = await IsFreeAsync(booking.RoomId, booking.StartDate, booking.EndDate, booking.WholeHouse);
     if (!isFree) throw new InvalidOperationException("Room is already booked.");
-
+    booking.Price = price;
     dbContext.Bookings.Add(booking);
     await dbContext.SaveChangesAsync();
     await transaction.CommitAsync();
     return booking;
   }
+
   public async Task<bool> IsFreeAsync(string roomId, DateOnly startDate, DateOnly endDate, bool wholeHouse)
   {
-    return !await dbContext.Bookings.AnyAsync(b =>
-      (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Pending || b.Status == BookingStatus.ClosedByAdmin) &&
-      (
-        wholeHouse || b.RoomId == roomId || b.WholeHouse
-      ) &&
-      b.StartDate < endDate &&
-      b.EndDate > startDate
-    );
+    if (wholeHouse)
+    {
+      return !await dbContext.Bookings.AnyAsync(b =>
+        (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Pending || b.Status == BookingStatus.ClosedByAdmin) &&
+        b.StartDate < endDate &&
+        b.EndDate > startDate
+      );
+    }
+    else
+    {
+      return !await dbContext.Bookings.AnyAsync(b =>
+        (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Pending || b.Status == BookingStatus.ClosedByAdmin) &&
+        (b.RoomId == roomId || b.WholeHouse) &&
+        b.StartDate < endDate &&
+        b.EndDate > startDate
+      );
+    }
   }
 
   public async Task<Booking> BookAsync(Guid bookingId)
@@ -108,6 +120,34 @@ public class BookingDomainService(
     await dbContext.SaveChangesAsync();
     return booking;
   }
+
+
+  private async Task<int> CalculatePriceAsync(string roomId, DateOnly startDate, DateOnly endDate)
+  {
+    if (endDate <= startDate)
+      throw new ArgumentException("End date must be after start date");
+
+    int totalDays = (endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue)).Days;
+
+    if (totalDays < 3)
+      throw new ArgumentException("Reservation must be at least 3 days long");
+
+    var room = await dbContext.Rooms
+      .FirstOrDefaultAsync(r => r.RoomId == roomId)
+      ?? throw new KeyNotFoundException($"Room with id '{roomId}' not found");
+
+    if (room.Price is 0)
+      throw new InvalidOperationException("Room price is not defined");
+
+    int basePrice = room.Price;
+    int additionalPrice = room.AdditionalPrice;
+
+    if (totalDays <= 7)
+      return totalDays * (basePrice + additionalPrice);
+
+    return totalDays * basePrice;
+  }
+
 
   public async Task DeleteBookingByIdAsync(Guid bookingId)
   {

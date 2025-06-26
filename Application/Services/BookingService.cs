@@ -51,7 +51,7 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
           PriceData = new SessionLineItemPriceDataOptions
           {
             Currency = "eur",
-            UnitAmount = createStripeSessionDto.Price * 100,
+            UnitAmount = booking.Price * 100,
             ProductData = new SessionLineItemPriceDataProductDataOptions
             {
               Name = $"Your Booking {createStripeSessionDto.RoomId}",

@@ -25,19 +25,64 @@ public class SlideService(
     var titleKey = Guid.NewGuid();
     var descKey = Guid.NewGuid();
 
-    var translations = new List<Translations>
-    {
-      new() { Key = titleKey, Uk = dto.UkTitle, En = dto.EnTitle, De = dto.DeTitle },
-      new() { Key = descKey, Uk = dto.UkDescription, En = dto.EnDescription, De = dto.DeDescription }
-    };
+    var translations = new List<Translations>();
 
-    await _translationService.CreateTranslationsAsync(translations);
+    bool hasAnyTitle = !string.IsNullOrWhiteSpace(dto.UkTitle)
+                    || !string.IsNullOrWhiteSpace(dto.EnTitle)
+                    || !string.IsNullOrWhiteSpace(dto.DeTitle);
+
+    bool hasAllTitle = !string.IsNullOrWhiteSpace(dto.UkTitle)
+                    && !string.IsNullOrWhiteSpace(dto.EnTitle)
+                    && !string.IsNullOrWhiteSpace(dto.DeTitle);
+
+    if (hasAllTitle)
+    {
+      translations.Add(new Translations
+      {
+        Key = titleKey,
+        Uk = dto.UkTitle!,
+        En = dto.EnTitle!,
+        De = dto.DeTitle!
+      });
+    }
+    else if (hasAnyTitle)
+    {
+      throw new ArgumentException("If one of the title translations is filled, all must be filled.");
+    }
+
+    bool hasAnyDesc = !string.IsNullOrWhiteSpace(dto.UkDescription)
+                    || !string.IsNullOrWhiteSpace(dto.EnDescription)
+                    || !string.IsNullOrWhiteSpace(dto.DeDescription);
+
+    bool hasAllDesc = !string.IsNullOrWhiteSpace(dto.UkDescription)
+                    && !string.IsNullOrWhiteSpace(dto.EnDescription)
+                    && !string.IsNullOrWhiteSpace(dto.DeDescription);
+
+    if (hasAllDesc)
+    {
+      translations.Add(new Translations
+      {
+        Key = descKey,
+        Uk = dto.UkDescription!,
+        En = dto.EnDescription!,
+        De = dto.DeDescription!
+      });
+    }
+    else if (hasAnyDesc)
+    {
+      throw new ArgumentException("If one of the description translations is filled, all must be filled.");
+    }
+
+    if (translations.Count > 0)
+    {
+      await _translationService.CreateTranslationsAsync(translations);
+    }
 
     var slide = new Slide
     {
       Id = Guid.NewGuid(),
-      TitleKey = titleKey,
-      DescriptionKey = descKey,
+      TitleKey = !hasAllTitle ? null : titleKey,
+      DescriptionKey = !hasAllDesc ? null : descKey,
       ImageUrl = imageUrl,
       Price = dto.Price
     };
@@ -48,13 +93,61 @@ public class SlideService(
 
   public async Task UpdateSlideAsync(SlideUpdateDto dto, IFormFile? newImageFile, CancellationToken cancellationToken = default)
   {
-    var translations = new List<Translations>
-    {
-      new() { Key = dto.TitleKey, Uk = dto.UkTitle, En = dto.EnTitle, De = dto.DeTitle },
-      new() { Key = dto.DescriptionKey, Uk = dto.UkDescription, En = dto.EnDescription, De = dto.DeDescription }
-    };
+    var translations = new List<Translations>();
 
-    await _translationService.UpdateTranslationsAsync(translations);
+    bool hasAnyTitle = !string.IsNullOrWhiteSpace(dto.UkTitle)
+                    || !string.IsNullOrWhiteSpace(dto.EnTitle)
+                    || !string.IsNullOrWhiteSpace(dto.DeTitle);
+
+    bool hasAllTitle = !string.IsNullOrWhiteSpace(dto.UkTitle)
+                    && !string.IsNullOrWhiteSpace(dto.EnTitle)
+                    && !string.IsNullOrWhiteSpace(dto.DeTitle);
+
+    if (hasAllTitle)
+    {
+      translations.Add(new Translations
+      {
+        Key = dto.TitleKey ?? Guid.NewGuid(),
+        Uk = dto.UkTitle!,
+        En = dto.EnTitle!,
+        De = dto.DeTitle!
+      });
+    }
+    else if (hasAnyTitle)
+    {
+      throw new ArgumentException("If one of the title translation fields is filled, all must be provided.");
+    }
+
+  
+    bool hasAnyDesc = !string.IsNullOrWhiteSpace(dto.UkDescription)
+                    || !string.IsNullOrWhiteSpace(dto.EnDescription)
+                    || !string.IsNullOrWhiteSpace(dto.DeDescription);
+
+    bool hasAllDesc = !string.IsNullOrWhiteSpace(dto.UkDescription)
+                    && !string.IsNullOrWhiteSpace(dto.EnDescription)
+                    && !string.IsNullOrWhiteSpace(dto.DeDescription);
+
+
+    if (hasAllDesc)
+    {
+      translations.Add(new Translations
+      {
+        Key = dto.DescriptionKey ?? Guid.NewGuid(),
+        Uk = dto.UkDescription!,
+        En = dto.EnDescription!,
+        De = dto.DeDescription!
+      });
+    }
+    else if (hasAnyDesc)
+    {
+      throw new ArgumentNullException("Translations not filled");
+    }
+
+
+    if (translations.Count != 0)
+    {
+      await _translationService.UpdateTranslationsAsync(translations);
+    }
 
     var existingSlide = await _slideService.GetSlidesByIdsAsync(new[] { dto.Id })
       .ContinueWith(t => t.Result.FirstOrDefault(), cancellationToken);
