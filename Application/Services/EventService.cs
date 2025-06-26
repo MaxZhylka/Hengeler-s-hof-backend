@@ -74,6 +74,21 @@ public class EventService(
         await _eventService.UpdateEventAsync(existingEvent, cancellationToken);
     }
 
+    public async Task SetEventActiveStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken)
+    {
+        await _eventService.SetEventActiveStatusAsync(id, isActive, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Event>> GetAllActiveEventsAsync(CancellationToken cancellationToken)
+    {
+        return await _eventService.GetAllActiveEventsAsync(cancellationToken);
+    }
+
+    public async Task DeleteEventByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await _eventService.DeleteEventAsync(id, cancellationToken);
+    }
+
     public async Task<IEnumerable<Event>> GetAllEventsAsync(CancellationToken cancellationToken)
     {
         return await _eventService.GetAllEventsAsync(cancellationToken);
@@ -92,20 +107,5 @@ public class EventService(
         await image.CopyToAsync(stream, cancellationToken);
 
         return $"/images/events/{imageName}";
-    }
-
-    public async Task SetEventActiveStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken)
-    {
-        await _eventService.SetEventActiveStatusAsync(id, isActive, cancellationToken);
-    }
-
-    public async Task<IEnumerable<Event>> GetAllActiveEventsAsync(CancellationToken cancellationToken)
-    {
-        return await _eventService.GetAllActiveEventsAsync(cancellationToken);
-    }
-
-    public async Task DeleteEventByIdAsync(Guid id, CancellationToken cancellationToken)
-    {
-        await _eventService.DeleteEventAsync(id, cancellationToken);
     }
 }

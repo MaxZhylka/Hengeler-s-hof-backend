@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Hengeler.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hengeler.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625220130_AddSlider")]
+    partial class AddSlider
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -225,7 +228,7 @@ namespace Hengeler.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("DescriptionKey")
+                    b.Property<Guid>("DescriptionKey")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ImageUrl")
@@ -241,7 +244,7 @@ namespace Hengeler.Migrations
                     b.Property<Guid?>("SliderId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TitleKey")
+                    b.Property<Guid>("TitleKey")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");

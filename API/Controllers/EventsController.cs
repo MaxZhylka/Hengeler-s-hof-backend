@@ -1,21 +1,30 @@
 using Hengeler.Application.DTOs.Event;
 using Hengeler.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hengeler.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class EventsController(IEventService eventAppService) : ControllerBase
+public class EventsController(IEventService eventAppService, IConfiguration configuration) : ControllerBase
 {
   private readonly IEventService _eventAppService = eventAppService;
 
+  private readonly string _adminEmails = configuration["AdminEmails"] ?? "";
+
+  [Authorize]
   [HttpPost]
   [Consumes("multipart/form-data")]
   public async Task<IActionResult> CreateEvent(
       [FromForm] EventCreateFormModel model,
       CancellationToken cancellationToken)
   {
+    var email = User.FindFirst("email")?.Value;
+    if (!_adminEmails.Split(',').Contains(email))
+    {
+      return Forbid();
+    }
     var dto = new EventCreateDto
     {
       UkTitle = model.UkTitle,
@@ -35,6 +44,7 @@ public class EventsController(IEventService eventAppService) : ControllerBase
     return Ok(eventId);
   }
 
+  [Authorize]
   [HttpPut("{id:guid}")]
   [Consumes("multipart/form-data")]
   public async Task<IActionResult> UpdateEvent(
@@ -42,6 +52,11 @@ public class EventsController(IEventService eventAppService) : ControllerBase
       [FromForm] EventUpdateFormModel model,
       CancellationToken cancellationToken)
   {
+    var email = User.FindFirst("email")?.Value;
+    if (!_adminEmails.Split(',').Contains(email))
+    {
+      return Forbid();
+    }
 
     var dto = new EventUpdateDto
     {
@@ -74,12 +89,18 @@ public class EventsController(IEventService eventAppService) : ControllerBase
     return Ok(events);
   }
 
+  [Authorize]
   [HttpPost("/api/Events/setIsActive")]
   public async Task<IActionResult> SetIsActive(
       [FromQuery] Guid id,
       [FromQuery] bool isActive,
       CancellationToken cancellationToken)
   {
+    var email = User.FindFirst("email")?.Value;
+    if (!_adminEmails.Split(',').Contains(email))
+    {
+      return Forbid();
+    }
     await _eventAppService.SetEventActiveStatusAsync(id, isActive, cancellationToken);
     return Ok();
   }
@@ -91,9 +112,15 @@ public class EventsController(IEventService eventAppService) : ControllerBase
     return Ok(events);
   }
 
+  [Authorize]
   [HttpDelete]
   public async Task<IActionResult> DeleteEventById([FromQuery] Guid id, CancellationToken cancellationToken)
   {
+    var email = User.FindFirst("email")?.Value;
+    if (!_adminEmails.Split(',').Contains(email))
+    {
+      return Forbid();
+    }
     await _eventAppService.DeleteEventByIdAsync(id, cancellationToken);
     return Ok();
   }

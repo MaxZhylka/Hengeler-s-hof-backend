@@ -27,6 +27,12 @@ builder.Services.AddScoped<ITranslationDomainService, TranslationDomainService>(
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddScoped<IEventDomainService, EventDomainService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ISlideDomainService, SlideDomainService>();
+builder.Services.AddScoped<ISlideService, SlideService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IRoomDomainService, RoomDomainService>();
+builder.Services.AddScoped<ISliderDomainService, SliderDomainService>();
+builder.Services.AddScoped<ISliderService, SliderService>();
 builder.Services.AddAuthentication("jwe")
     .AddScheme<AuthenticationSchemeOptions, DummyAuthHandler>("jwe", null);
 

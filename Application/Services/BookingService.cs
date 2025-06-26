@@ -51,7 +51,7 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
           PriceData = new SessionLineItemPriceDataOptions
           {
             Currency = "eur",
-            UnitAmount = createStripeSessionDto.Price * 100,
+            UnitAmount = booking.Price * 100,
             ProductData = new SessionLineItemPriceDataProductDataOptions
             {
               Name = $"Your Booking {createStripeSessionDto.RoomId}",
@@ -169,5 +169,27 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
   public async Task<List<BookingDto>> GetBookingsAsync()
   {
     return await _bookingDomainService.GetBookingsAsync();
+  }
+
+  public async Task BookByAdminAsync(CreateAdminBookingDto createAdmin)
+  {
+    await _bookingDomainService.CreatePendingBookingAsync(new Booking
+    (
+      1,
+      1,
+      createAdmin.RoomId,
+      createAdmin.UserId,
+      BookingStatus.ClosedByAdmin,
+      createAdmin.StartDate,
+      createAdmin.EndDate,
+      false,
+      null,
+      createAdmin.WholeHouse
+    ));
+  }
+
+  public async Task DeleteBookingByIdAsync(Guid bookingId)
+  {
+    await _bookingDomainService.DeleteBookingByIdAsync(bookingId);
   }
 }

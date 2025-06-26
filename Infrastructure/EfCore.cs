@@ -3,13 +3,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hengeler.Infrastructure;
 
-
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
   public DbSet<User> Users { get; set; } = null!;
   public DbSet<Booking> Bookings { get; set; } = null!;
   public DbSet<Translations> Translations { get; set; } = null!;
   public DbSet<Event> Events { get; set; } = null!;
+  public DbSet<Room> Rooms { get; set; } = null!;
+  public DbSet<Slider> Sliders { get; set; } = null!;
+  public DbSet<Slide> Slides { get; set; } = null!;
   public DbSet<Contact> Contacts { get; set; } = null!;
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
