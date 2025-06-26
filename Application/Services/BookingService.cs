@@ -170,4 +170,26 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
   {
     return await _bookingDomainService.GetBookingsAsync();
   }
+
+  public async Task BookByAdminAsync(CreateAdminBookingDto createAdmin)
+  {
+    await _bookingDomainService.CreatePendingBookingAsync(new Booking
+    (
+      1,
+      1,
+      createAdmin.RoomId,
+      createAdmin.UserId,
+      BookingStatus.ClosedByAdmin,
+      createAdmin.StartDate,
+      createAdmin.EndDate,
+      false,
+      null,
+      createAdmin.WholeHouse
+    ));
+  }
+
+  public async Task DeleteBookingByIdAsync(Guid bookingId)
+  {
+    await _bookingDomainService.DeleteBookingByIdAsync(bookingId);
+  }
 }

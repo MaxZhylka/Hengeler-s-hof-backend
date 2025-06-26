@@ -38,7 +38,6 @@ public class BookingDomainService(
     );
   }
 
-
   public async Task<Booking> BookAsync(Guid bookingId)
   {
     using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
@@ -108,5 +107,12 @@ public class BookingDomainService(
     booking.StripeId = stripeId;
     await dbContext.SaveChangesAsync();
     return booking;
+  }
+
+  public async Task DeleteBookingByIdAsync(Guid bookingId)
+  {
+    var rowsAffected = await dbContext.Bookings
+    .Where(b => b.Id == bookingId)
+    .ExecuteDeleteAsync();
   }
 }

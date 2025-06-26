@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Hengeler.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hengeler.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625183947_AddRoomsManagment")]
+    partial class AddRoomsManagment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,10 +206,6 @@ namespace Hengeler.Migrations
                     b.Property<int>("Price")
                         .HasColumnType("integer");
 
-                    b.Property<string>("RoomId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<int>("Size")
                         .HasColumnType("integer");
 
@@ -238,9 +237,6 @@ namespace Hengeler.Migrations
                     b.Property<Guid?>("RoomId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("SliderId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("TitleKey")
                         .HasColumnType("uuid");
 
@@ -248,28 +244,7 @@ namespace Hengeler.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.HasIndex("SliderId");
-
                     b.ToTable("Slides");
-                });
-
-            modelBuilder.Entity("Hengeler.Domain.Entities.Slider", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.PrimitiveCollection<List<Guid>>("SlideIds")
-                        .IsRequired()
-                        .HasColumnType("uuid[]");
-
-                    b.Property<string>("SliderId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Sliders");
                 });
 
             modelBuilder.Entity("Hengeler.Domain.Entities.Translations", b =>
@@ -357,18 +332,9 @@ namespace Hengeler.Migrations
                     b.HasOne("Hengeler.Domain.Entities.Room", null)
                         .WithMany("Slides")
                         .HasForeignKey("RoomId");
-
-                    b.HasOne("Hengeler.Domain.Entities.Slider", null)
-                        .WithMany("Slides")
-                        .HasForeignKey("SliderId");
                 });
 
             modelBuilder.Entity("Hengeler.Domain.Entities.Room", b =>
-                {
-                    b.Navigation("Slides");
-                });
-
-            modelBuilder.Entity("Hengeler.Domain.Entities.Slider", b =>
                 {
                     b.Navigation("Slides");
                 });

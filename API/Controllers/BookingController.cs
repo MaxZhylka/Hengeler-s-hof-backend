@@ -8,14 +8,16 @@ namespace Hengeler.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BookingController(IBookingService bookingService) : ControllerBase
+public class BookingController(IBookingService bookingService, IConfiguration configuration) : ControllerBase
 {
   private readonly IBookingService _bookingService = bookingService;
+  private readonly string _adminEmails = configuration["AdminEmails"] ?? "";
 
   [Authorize]
   [HttpPost("create-stripe-session")]
   public async Task<IActionResult> CreateStripeSession([FromBody] CreateStripeSessionDto createStripeSessionDto)
   {
+
 
     if (createStripeSessionDto == null)
     {
@@ -39,5 +41,39 @@ public class BookingController(IBookingService bookingService) : ControllerBase
   {
     List<BookingDto> bookings = await _bookingService.GetBookingsAsync();
     return Ok(bookings);
+  }
+
+  [Authorize]
+  [HttpPost("book-by-admin")]
+  public async Task<IActionResult> BookByAdmin([FromBody] CreateAdminBookingDto createAdminBookingDto)
+  {
+    var email = User.FindFirst("email")?.Value;
+
+    if (!_adminEmails.Split(',').Contains(email))
+    {
+      Console.WriteLine(_adminEmails);
+      Console.WriteLine(email);
+      return Forbid();
+    }
+
+    await _bookingService.BookByAdminAsync(createAdminBookingDto);
+    return Ok();
+  }
+
+  [Authorize]
+  [HttpDelete]
+  public async Task<IActionResult> DeleteBooking([FromQuery] Guid id)
+  {
+    var email = User.FindFirst("email")?.Value;
+
+    if (!_adminEmails.Split(',').Contains(email))
+    {
+      Console.WriteLine(_adminEmails);
+      Console.WriteLine(email);
+      return Forbid();
+    }
+
+    await _bookingService.DeleteBookingByIdAsync(id);
+    return Ok();
   }
 }

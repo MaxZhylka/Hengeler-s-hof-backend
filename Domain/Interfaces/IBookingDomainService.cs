@@ -11,4 +11,6 @@ public interface IBookingDomainService
   Task<bool> IsFreeAsync(string roomId, DateOnly startDate, DateOnly endDate, bool wholeHouse);
 
   Task<Booking> UpdateBookingStripeIdAsync(Guid bookingId, string stripeId);
+
+  Task DeleteBookingByIdAsync(Guid bookingId);
 }
