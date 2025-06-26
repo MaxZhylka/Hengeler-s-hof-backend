@@ -23,8 +23,6 @@ public class EventsController(IEventService eventAppService, IConfiguration conf
     var email = User.FindFirst("email")?.Value;
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
     var dto = new EventCreateDto
@@ -57,8 +55,6 @@ public class EventsController(IEventService eventAppService, IConfiguration conf
     var email = User.FindFirst("email")?.Value;
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
 
@@ -103,8 +99,6 @@ public class EventsController(IEventService eventAppService, IConfiguration conf
     var email = User.FindFirst("email")?.Value;
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
     await _eventAppService.SetEventActiveStatusAsync(id, isActive, cancellationToken);
@@ -125,8 +119,6 @@ public class EventsController(IEventService eventAppService, IConfiguration conf
     var email = User.FindFirst("email")?.Value;
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
     await _eventAppService.DeleteEventByIdAsync(id, cancellationToken);

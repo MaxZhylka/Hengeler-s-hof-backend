@@ -51,8 +51,6 @@ public class BookingController(IBookingService bookingService, IConfiguration co
 
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
 
@@ -68,8 +66,6 @@ public class BookingController(IBookingService bookingService, IConfiguration co
 
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
 

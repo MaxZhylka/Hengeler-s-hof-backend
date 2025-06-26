@@ -1,7 +1,6 @@
 using Hengeler.Application.DTOs.Room;
 using Hengeler.Application.Interfaces;
 using Hengeler.Domain.Entities;
-using Hengeler.Domain.Entities.Interfaces;
 using Hengeler.Domain.Interfaces;
 
 namespace Hengeler.Application.Services;
@@ -23,9 +22,9 @@ public class RoomService(
   {
     bool isCreate = dto.Id == Guid.Empty;
 
-    var nameKey = isCreate ? Guid.NewGuid() : (await _roomService.GetRoomById(dto.RoomId)).NameKey;
-    var descriptionKey = isCreate ? Guid.NewGuid() : (await _roomService.GetRoomById(dto.RoomId)).DescriptionKey;
-    var maxGuestsKey = isCreate ? Guid.NewGuid() : (await _roomService.GetRoomById(dto.RoomId)).MaxGuestsKey;
+    var nameKey = isCreate ? Guid.NewGuid() : dto.NameKey!.Value;
+    var descriptionKey = isCreate ? Guid.NewGuid() : dto.DescriptionKey!.Value;
+    var maxGuestsKey = isCreate ? Guid.NewGuid() : dto.MaxGuestsKey!.Value;
 
     var translations = new List<Translations>
     {

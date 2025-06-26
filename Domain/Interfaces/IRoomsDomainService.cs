@@ -1,5 +1,7 @@
 
-namespace Hengeler.Domain.Entities.Interfaces;
+using Hengeler.Domain.Entities;
+
+namespace Hengeler.Domain.Interfaces;
 public interface IRoomDomainService
 {
   Task<Room> GetRoomById(string id);

@@ -1,5 +1,5 @@
 using Hengeler.Domain.Entities;
-using Hengeler.Domain.Entities.Interfaces;
+using Hengeler.Domain.Interfaces;
 using Hengeler.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +23,7 @@ public class RoomDomainService(AppDbContext context) : IRoomDomainService
             .ToListAsync();
 
       var slidesById = slides.ToDictionary(s => s.Id);
-      room.Slides = [.. room.SlideIds.Select(id => slides.First(s => s.Id == id))];
+      room.Slides = [.. room.SlideIds.Select(id => slidesById[id])];
     }
     else
     {

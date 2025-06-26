@@ -5,9 +5,9 @@ public class RoomDto
 {
   public Guid Id { get; set; }
   public string RoomId { get; set; }
-  public Guid? NameKey { get; set; }
-  public Guid? DescriptionKey { get; set; }
-  public Guid? MaxGuestsKey { get; set; }
+  public Guid NameKey { get; set; }
+  public Guid DescriptionKey { get; set; }
+  public Guid MaxGuestsKey { get; set; }
 
   public string NameUk { get; set; } = "";
   public string NameEn { get; set; } = "";

@@ -1,4 +1,3 @@
-
 using Hengeler.Domain.Entities;
 using Hengeler.Domain.Interfaces;
 using Hengeler.Infrastructure;

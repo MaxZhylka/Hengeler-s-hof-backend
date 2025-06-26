@@ -3,7 +3,6 @@ using Hengeler.Application.Interfaces;
 using Hengeler.Application.Services;
 using Hengeler.Domain;
 using Hengeler.Domain.Entities;
-using Hengeler.Domain.Entities.Interfaces;
 using Hengeler.Domain.Interfaces;
 using Hengeler.Domain.Services;
 using Hengeler.Infrastructure;
@@ -124,7 +123,6 @@ app.UseMiddleware<JweAuthenticationMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.UseStaticFiles();
 app.Run();
 
 

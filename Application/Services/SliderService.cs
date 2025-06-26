@@ -1,7 +1,7 @@
 using Hengeler.Application.DTOs.Slider;
 using Hengeler.Application.Interfaces;
 using Hengeler.Domain.Entities;
-using Hengeler.Domain.Entities.Interfaces;
+using Hengeler.Domain.Interfaces;
 
 namespace Hengeler.Application.Services;
 

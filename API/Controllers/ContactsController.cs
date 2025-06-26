@@ -26,8 +26,6 @@ public class ContactController(IContactService contactService, IConfiguration co
 
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
     var updated = await contactService.UpdateContactAsync(dto);
@@ -42,8 +40,6 @@ public class ContactController(IContactService contactService, IConfiguration co
 
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
     var updated = await contactService.UpdateSocialMediaAsync(dto);

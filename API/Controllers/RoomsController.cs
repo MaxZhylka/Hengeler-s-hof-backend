@@ -10,7 +10,7 @@ namespace Hengeler.API.Controllers;
 public class RoomsController(IRoomService roomAppService, IConfiguration configuration) : ControllerBase
 {
   private readonly IRoomService _roomAppService = roomAppService;
-  
+
   private readonly string _adminEmails = configuration["AdminEmails"] ?? "";
 
   [HttpGet("{id}")]
@@ -34,8 +34,6 @@ public class RoomsController(IRoomService roomAppService, IConfiguration configu
     var email = User.FindFirst("email")?.Value;
     if (!_adminEmails.Split(',').Contains(email))
     {
-      Console.WriteLine(_adminEmails);
-      Console.WriteLine(email);
       return Forbid();
     }
     var result = await _roomAppService.CreateOrUpdateRoomAsync(dto);
