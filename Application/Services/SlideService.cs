@@ -157,6 +157,28 @@ public class SlideService(
 
     if (newImageFile is not null)
     {
+       if (!string.IsNullOrEmpty(existingSlide.ImageUrl))
+        {
+            var relativePath = existingSlide.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
+            var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
+
+            try
+            {
+                if (File.Exists(absolutePath))
+                {
+                    File.Delete(absolutePath);
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
+            }
+        }
       existingSlide.ImageUrl = await SaveImageAsync(newImageFile, cancellationToken);
     }
 
@@ -172,9 +194,39 @@ public class SlideService(
 
   public async Task DeleteSlideAsync(Guid id, CancellationToken cancellationToken = default)
   {
-    await _slideService.DeleteSlideAsync(id);
-  }
+      var slides = await _slideService.GetSlidesByIdsAsync(new[] { id });
+      var slide = slides.FirstOrDefault();
 
+      if (slide == null)
+          throw new InvalidOperationException("Slide not found");
+
+      string? imageUrl = slide.ImageUrl;
+
+      await _slideService.DeleteSlideAsync(id);
+
+      if (!string.IsNullOrEmpty(imageUrl))
+      {
+          var relativePath = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
+          var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
+
+          try
+          {
+              if (File.Exists(absolutePath))
+              {
+                  File.Delete(absolutePath);
+              }
+              else
+              {
+                  Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
+              }
+          }
+          catch (Exception ex)
+          {
+              Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
+          }
+      }
+  }
   private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
   {
     var imageName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";

@@ -51,22 +51,30 @@ public class TranslationDomainService(AppDbContext context) : ITranslationDomain
 
   public async Task UpdateTranslationsAsync(IEnumerable<Translations> translations)
   {
-    ArgumentNullException.ThrowIfNull(translations);
+      ArgumentNullException.ThrowIfNull(translations);
 
-    var keys = translations.Select(t => t.Key).ToList();
+      var keys = translations.Select(t => t.Key).ToList();
 
-    var existingTranslations = await _context.Translations.AsTracking()
-        .Where(t => keys.Contains(t.Key))
-        .ToListAsync();
+      var existingTranslations = await _context.Translations.AsTracking()
+          .Where(t => keys.Contains(t.Key))
+          .ToListAsync();
 
-    foreach (var updatedTranslation in translations)
-    {
-      var existing = existingTranslations.FirstOrDefault(t => t.Key == updatedTranslation.Key) ?? throw new InvalidOperationException($"Translation with key '{updatedTranslation.Key}' does not exist.");
-      existing.Uk = updatedTranslation.Uk;
-      existing.De = updatedTranslation.De;
-      existing.En = updatedTranslation.En;
-    }
+      foreach (var updatedTranslation in translations)
+      {
+          var existing = existingTranslations.FirstOrDefault(t => t.Key == updatedTranslation.Key);
 
-    await _context.SaveChangesAsync();
+          if (existing == null)
+          {
+              await _context.Translations.AddAsync(updatedTranslation);
+          }
+          else
+          {
+              existing.Uk = updatedTranslation.Uk;
+              existing.De = updatedTranslation.De;
+              existing.En = updatedTranslation.En;
+          }
+      }
+
+      await _context.SaveChangesAsync();
   }
 }

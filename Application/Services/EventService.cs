@@ -61,7 +61,29 @@ public class EventService(
 
         if (newImageFile is not null)
         {
+            if (!string.IsNullOrEmpty(dto.ImageUrl))
+            {
+                var relativePath = dto.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
+
+                try
+                {
+                    if (File.Exists(absolutePath))
+                    {
+                        File.Delete(absolutePath);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
+                }
+            }
             existingEvent.ImageUrl = await SaveImageAsync(newImageFile, cancellationToken);
+
         }
 
         existingEvent.Link = dto.Link;
@@ -86,7 +108,35 @@ public class EventService(
 
     public async Task DeleteEventByIdAsync(Guid id, CancellationToken cancellationToken)
     {
+        var ev = await _eventService.GetEventByIdAsync(id, cancellationToken);
+        if (ev == null)
+            throw new InvalidOperationException("Event not found");
+
+        string? imageUrl = ev.ImageUrl;
+
         await _eventService.DeleteEventAsync(id, cancellationToken);
+
+        if (!string.IsNullOrEmpty(imageUrl))
+        {
+            var relativePath = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
+
+            try
+            {
+                if (File.Exists(absolutePath))
+                {
+                    File.Delete(absolutePath);
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
+            }
+        }
     }
 
     public async Task<IEnumerable<Event>> GetAllEventsAsync(CancellationToken cancellationToken)

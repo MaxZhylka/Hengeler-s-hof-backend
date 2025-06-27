@@ -3,3 +3,4 @@ obj/
 out/
 appsettings.json
 wwwroot/*
+publish/*
