@@ -173,7 +173,7 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
 
   public async Task BookByAdminAsync(CreateAdminBookingDto createAdmin)
   {
-    await _bookingDomainService.CreatePendingBookingAsync(new Booking
+    await _bookingDomainService.CreateAdminBookingAsync(new Booking
     (
       1,
       1,
