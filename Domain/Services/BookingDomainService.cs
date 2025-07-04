@@ -29,6 +29,24 @@ public class BookingDomainService(
     return booking;
   }
 
+  public async Task<Booking> CreateAdminBookingAsync(Booking booking)
+  {
+    await dbContext.Bookings
+    .Where(b => b.Status == BookingStatus.Pending && b.ExpiresAt != null && b.ExpiresAt < DateTime.UtcNow)
+    .ExecuteDeleteAsync();
+
+    using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+
+    if (booking.RoomId == "house") booking.WholeHouse = true;
+    var isFree = await IsFreeAsync(booking.RoomId, booking.StartDate, booking.EndDate, booking.WholeHouse);
+    if (!isFree) throw new InvalidOperationException("Room is already booked.");
+
+    dbContext.Bookings.Add(booking);
+    await dbContext.SaveChangesAsync();
+    await transaction.CommitAsync();
+    return booking;
+  }
+
   public async Task<bool> IsFreeAsync(string roomId, DateOnly startDate, DateOnly endDate, bool wholeHouse)
   {
     if (wholeHouse)
