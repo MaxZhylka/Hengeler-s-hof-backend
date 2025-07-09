@@ -28,7 +28,25 @@ public class ContactSeeder(AppDbContext context)
       };
 
       _context.Contacts.Add(contact);
-      await _context.SaveChangesAsync();
+
     }
+
+    await _context.SaveChangesAsync();
+
+    bool bookingFeatureExists = await _context.Features
+      .AnyAsync(f => f.FeatureName == "booking-enabled");
+
+    if (!bookingFeatureExists)
+    {
+      var bookingFeature = new Feature
+      {
+        FeatureName = "booking-enabled",
+        IsActive = true
+      };
+
+      _context.Features.Add(bookingFeature);
+    }
+
+    await _context.SaveChangesAsync();
   }
 }

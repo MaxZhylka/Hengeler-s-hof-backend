@@ -13,7 +13,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
   public DbSet<Slider> Sliders { get; set; } = null!;
   public DbSet<Slide> Slides { get; set; } = null!;
   public DbSet<Contact> Contacts { get; set; } = null!;
-
+  public DbSet<Feature> Features { get; set; } = null!;
+  public DbSet<PriceItem> PriceItems { get; set; } = null!;
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     modelBuilder.Entity<User>(entity =>

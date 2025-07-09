@@ -33,6 +33,9 @@ builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IRoomDomainService, RoomDomainService>();
 builder.Services.AddScoped<ISliderDomainService, SliderDomainService>();
 builder.Services.AddScoped<ISliderService, SliderService>();
+builder.Services.AddScoped<IPriceItemDomainService, PriceItemDomainService>();
+builder.Services.AddScoped<IPriceListApplicationService, PriceListApplicationService>();
+builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddAuthentication("jwe")
     .AddScheme<AuthenticationSchemeOptions, DummyAuthHandler>("jwe", null);
 
