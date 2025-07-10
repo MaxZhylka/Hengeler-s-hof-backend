@@ -8,11 +8,12 @@ namespace Hengeler.Application.Services;
 public class EventService(
     IEventDomainService eventService,
     ITranslationDomainService translationService,
-    IWebHostEnvironment environment) : IEventService
+    IConfiguration config) : IEventService
 {
     private readonly IEventDomainService _eventService = eventService;
     private readonly ITranslationDomainService _translationService = translationService;
-    private readonly IWebHostEnvironment _environment = environment;
+    private readonly string _storagePath = config["FileStorage:BasePath"]
+        ?? throw new InvalidOperationException("File storage path is not configured");
 
     public async Task<Guid> CreateEventAsync(EventCreateDto dto, IFormFile? imageFile, CancellationToken cancellationToken = default)
     {
@@ -64,7 +65,7 @@ public class EventService(
             if (!string.IsNullOrEmpty(dto.ImageUrl))
             {
                 var relativePath = dto.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-                var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
+                var absolutePath = Path.Combine(_storagePath, relativePath);
 
                 try
                 {
@@ -119,7 +120,7 @@ public class EventService(
         if (!string.IsNullOrEmpty(imageUrl))
         {
             var relativePath = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
+            var absolutePath = Path.Combine(_storagePath, relativePath);
 
             try
             {
@@ -146,7 +147,7 @@ public class EventService(
     private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
     {
         var imageName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
-        var imagePath = Path.Combine(_environment.WebRootPath, "images", "events");
+        var imagePath = Path.Combine(_storagePath, "images", "events");
 
         if (!Directory.Exists(imagePath))
             Directory.CreateDirectory(imagePath);

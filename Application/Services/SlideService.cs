@@ -9,12 +9,13 @@ namespace Hengeler.Application.Services;
 public class SlideService(
   ISlideDomainService slideService,
   ITranslationDomainService translationService,
-  IWebHostEnvironment environment
+    IConfiguration config
 ) : ISlideService
 {
   private readonly ISlideDomainService _slideService = slideService;
   private readonly ITranslationDomainService _translationService = translationService;
-  private readonly IWebHostEnvironment _environment = environment;
+  private readonly string _storagePath = config["FileStorage:BasePath"]
+      ?? throw new InvalidOperationException("File storage path is not configured");
 
   public async Task<Guid> CreateSlideAsync(SlideCreateDto dto, IFormFile? imageFile, CancellationToken cancellationToken = default)
   {
@@ -118,7 +119,7 @@ public class SlideService(
       throw new ArgumentException("If one of the title translation fields is filled, all must be provided.");
     }
 
-  
+
     bool hasAnyDesc = !string.IsNullOrWhiteSpace(dto.UkDescription)
                     || !string.IsNullOrWhiteSpace(dto.EnDescription)
                     || !string.IsNullOrWhiteSpace(dto.DeDescription);
@@ -157,28 +158,28 @@ public class SlideService(
 
     if (newImageFile is not null)
     {
-       if (!string.IsNullOrEmpty(existingSlide.ImageUrl))
+      if (!string.IsNullOrEmpty(existingSlide.ImageUrl))
+      {
+        var relativePath = existingSlide.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
+        var absolutePath = Path.Combine(_storagePath, relativePath);
+
+        try
         {
-            var relativePath = existingSlide.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-
-            var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
-
-            try
-            {
-                if (File.Exists(absolutePath))
-                {
-                    File.Delete(absolutePath);
-                }
-                else
-                {
-                    Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
-            }
+          if (File.Exists(absolutePath))
+          {
+            File.Delete(absolutePath);
+          }
+          else
+          {
+            Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
+          }
         }
+        catch (Exception ex)
+        {
+          Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
+        }
+      }
       existingSlide.ImageUrl = await SaveImageAsync(newImageFile, cancellationToken);
     }
 
@@ -194,43 +195,43 @@ public class SlideService(
 
   public async Task DeleteSlideAsync(Guid id, CancellationToken cancellationToken = default)
   {
-      var slides = await _slideService.GetSlidesByIdsAsync(new[] { id });
-      var slide = slides.FirstOrDefault();
+    var slides = await _slideService.GetSlidesByIdsAsync(new[] { id });
+    var slide = slides.FirstOrDefault();
 
-      if (slide == null)
-          throw new InvalidOperationException("Slide not found");
+    if (slide == null)
+      throw new InvalidOperationException("Slide not found");
 
-      string? imageUrl = slide.ImageUrl;
+    string? imageUrl = slide.ImageUrl;
 
-      await _slideService.DeleteSlideAsync(id);
+    await _slideService.DeleteSlideAsync(id);
 
-      if (!string.IsNullOrEmpty(imageUrl))
+    if (!string.IsNullOrEmpty(imageUrl))
+    {
+      var relativePath = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
+      var absolutePath = Path.Combine(_storagePath, relativePath);
+
+      try
       {
-          var relativePath = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-
-          var absolutePath = Path.Combine(_environment.WebRootPath, relativePath);
-
-          try
-          {
-              if (File.Exists(absolutePath))
-              {
-                  File.Delete(absolutePath);
-              }
-              else
-              {
-                  Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
-              }
-          }
-          catch (Exception ex)
-          {
-              Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
-          }
+        if (File.Exists(absolutePath))
+        {
+          File.Delete(absolutePath);
+        }
+        else
+        {
+          Console.WriteLine($"Warning: File '{absolutePath}' not found for deletion.");
+        }
       }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error deleting file '{absolutePath}': {ex.Message}");
+      }
+    }
   }
   private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
   {
     var imageName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
-    var imagePath = Path.Combine(_environment.WebRootPath, "images", "slides");
+    var imagePath = Path.Combine(_storagePath, "images", "slides");
 
     if (!Directory.Exists(imagePath))
       Directory.CreateDirectory(imagePath);

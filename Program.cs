@@ -8,6 +8,7 @@ using Hengeler.Domain.Services;
 using Hengeler.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,9 @@ builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IRoomDomainService, RoomDomainService>();
 builder.Services.AddScoped<ISliderDomainService, SliderDomainService>();
 builder.Services.AddScoped<ISliderService, SliderService>();
+builder.Services.AddScoped<IPriceItemDomainService, PriceItemDomainService>();
+builder.Services.AddScoped<IPriceListApplicationService, PriceListApplicationService>();
+builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddAuthentication("jwe")
     .AddScheme<AuthenticationSchemeOptions, DummyAuthHandler>("jwe", null);
 
@@ -95,7 +99,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.WebHost.UseWebRoot("wwwroot");
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
@@ -117,7 +120,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
-app.UseStaticFiles();
+
+var storagePath = builder.Configuration["FileStorage:BasePath"];
+if (string.IsNullOrWhiteSpace(storagePath))
+{
+    throw new Exception("File storage path is not configured");
+}
+
+Directory.CreateDirectory(storagePath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(storagePath),
+    RequestPath = ""
+});
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<JweAuthenticationMiddleware>();
 app.UseAuthentication();

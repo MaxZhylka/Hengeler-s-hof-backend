@@ -2,4 +2,5 @@ bin/
 obj/
 out/
 appsettings.json
+appsettings.Development.json
 publish/*

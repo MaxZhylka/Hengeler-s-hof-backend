@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Hengeler</RootNamespace>
     <AssemblyName>Hengeler</AssemblyName>
+    <EnableDefaultStaticWebAssets>false</EnableDefaultStaticWebAssets>
   </PropertyGroup>
 
   <ItemGroup>
