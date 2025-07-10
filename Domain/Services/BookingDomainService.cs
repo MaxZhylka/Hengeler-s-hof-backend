@@ -147,7 +147,7 @@ public class BookingDomainService(
 
     int totalDays = (endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue)).Days;
 
-    if (totalDays < 3)
+    if (totalDays < 2)
       throw new ArgumentException("Reservation must be at least 3 days long");
 
     var room = await dbContext.Rooms
