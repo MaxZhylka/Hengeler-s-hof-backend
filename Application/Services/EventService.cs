@@ -2,6 +2,8 @@ using Hengeler.Application.DTOs.Event;
 using Hengeler.Application.Interfaces;
 using Hengeler.Domain.Entities;
 using Hengeler.Domain.Interfaces;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp;
 
 namespace Hengeler.Application.Services;
 
@@ -146,7 +148,7 @@ public class EventService(
     }
     private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
     {
-        var imageName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
+        var imageName = $"{Guid.NewGuid()}.webp";
         var imagePath = Path.Combine(_storagePath, "images", "events");
 
         if (!Directory.Exists(imagePath))
@@ -154,8 +156,15 @@ public class EventService(
 
         var fullPath = Path.Combine(imagePath, imageName);
 
-        await using var stream = new FileStream(fullPath, FileMode.Create);
-        await image.CopyToAsync(stream, cancellationToken);
+        using var imageStream = image.OpenReadStream();
+        using var img = await Image.LoadAsync(imageStream, cancellationToken);
+
+        var encoder = new WebpEncoder()
+        {
+            Quality = 75
+        };
+
+        await img.SaveAsync(fullPath, encoder, cancellationToken);
 
         return $"/images/events/{imageName}";
     }

@@ -3,6 +3,8 @@ using Hengeler.Application.Interfaces;
 using Hengeler.Domain.Entities;
 using Hengeler.Domain.Interfaces;
 using Hengeler.Domain.Services;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace Hengeler.Application.Services;
 
@@ -228,19 +230,26 @@ public class SlideService(
       }
     }
   }
-  private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
-  {
-    var imageName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
-    var imagePath = Path.Combine(_storagePath, "images", "slides");
+      private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
+    {
+        var imageName = $"{Guid.NewGuid()}.webp";
+        var imagePath = Path.Combine(_storagePath, "images", "slides");
 
-    if (!Directory.Exists(imagePath))
-      Directory.CreateDirectory(imagePath);
+        if (!Directory.Exists(imagePath))
+            Directory.CreateDirectory(imagePath);
 
-    var fullPath = Path.Combine(imagePath, imageName);
+        var fullPath = Path.Combine(imagePath, imageName);
 
-    await using var stream = new FileStream(fullPath, FileMode.Create);
-    await image.CopyToAsync(stream, cancellationToken);
+        using var imageStream = image.OpenReadStream();
+        using var img = await Image.LoadAsync(imageStream, cancellationToken);
 
-    return $"/images/slides/{imageName}";
-  }
+        var encoder = new WebpEncoder()
+        {
+            Quality = 75
+        };
+
+        await img.SaveAsync(fullPath, encoder, cancellationToken);
+
+        return $"/images/slides/{imageName}";
+    }
 }
