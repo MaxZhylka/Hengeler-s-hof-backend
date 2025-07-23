@@ -11,7 +11,6 @@ public class RoomDomainService(AppDbContext context) : IRoomDomainService
 
   public async Task<Room> GetRoomById(string id)
   {
-
     var room = await _context.Rooms
         .FirstOrDefaultAsync(r => r.RoomId == id)
         ?? throw new KeyNotFoundException("There is no room with such id");
@@ -23,7 +22,19 @@ public class RoomDomainService(AppDbContext context) : IRoomDomainService
             .ToListAsync();
 
       var slidesById = slides.ToDictionary(s => s.Id);
-      room.Slides = [.. room.SlideIds.Select(id => slidesById[id])];
+
+      var existingSlideIds = room.SlideIds.Where(id => slidesById.ContainsKey(id)).ToList();
+
+      if (existingSlideIds.Count != room.SlideIds.Count)
+      {
+        room.SlideIds = existingSlideIds;
+
+        _context.Rooms.Update(room);
+
+        await _context.SaveChangesAsync();
+      }
+
+      room.Slides = existingSlideIds.Select(id => slidesById[id]).ToList();
     }
     else
     {
@@ -32,6 +43,7 @@ public class RoomDomainService(AppDbContext context) : IRoomDomainService
 
     return room;
   }
+
   public async Task<Room> CreateOrUpdateRoomAsync(Room room)
   {
     var existing = await _context.Rooms.FirstOrDefaultAsync(r => r.Id == room.Id);

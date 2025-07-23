@@ -23,11 +23,20 @@ public class SliderDomainService(AppDbContext context) : ISliderDomainService
 
       var slidesById = slides.ToDictionary(s => s.Id);
 
-      slider.Slides = [.. slider.SlideIds.Select(id => slidesById[id])];
+      var existingSlideIds = slider.SlideIds.Where(id => slidesById.ContainsKey(id)).ToList();
+
+      if (existingSlideIds.Count != slider.SlideIds.Count)
+      {
+        slider.SlideIds = existingSlideIds;
+        _context.Sliders.Update(slider);
+        await _context.SaveChangesAsync();
+      }
+
+      slider.Slides = existingSlideIds.Select(id => slidesById[id]).ToList();
     }
     else
     {
-      slider.Slides = [];
+      slider.Slides = new List<Slide>();
     }
 
     return slider;
