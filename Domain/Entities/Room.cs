@@ -5,7 +5,7 @@ namespace Hengeler.Domain.Entities;
 public class Room
 {
   public Guid Id { get; set; } = Guid.NewGuid();
-  public string RoomId { get; set; }
+  public required string RoomId { get; set; }
 
   public Guid NameKey { get; set; }
 
@@ -23,6 +23,6 @@ public class Room
 
   public int Size { get; set; }
 
-  public List<Guid> SlideIds { get; set; }
+  public List<Guid> SlideIds { get; set; } = [];
   public ICollection<Slide> Slides { get; set; } = [];
 }

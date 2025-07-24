@@ -10,7 +10,7 @@ public class CreateStripeSessionDto
   public int NumberOfDays { get; set; }
 
   [Required]
-  public string RoomId { get; set; }
+  public required string RoomId { get; set; }
   [Required]
   public Guid UserId { get; set; }
   public DateOnly StartDate { get; set; }

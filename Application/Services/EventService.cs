@@ -2,8 +2,10 @@ using Hengeler.Application.DTOs.Event;
 using Hengeler.Application.Interfaces;
 using Hengeler.Domain.Entities;
 using Hengeler.Domain.Interfaces;
-using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using SixLabors.ImageSharp.Processing;
 
 namespace Hengeler.Application.Services;
 
@@ -159,9 +161,47 @@ public class EventService(
         using var imageStream = image.OpenReadStream();
         using var img = await Image.LoadAsync(imageStream, cancellationToken);
 
+
+        var exif = img.Metadata.ExifProfile;
+        ushort? orientation = null;
+
+        if (exif != null && exif.TryGetValue(ExifTag.Orientation, out IExifValue<ushort>? o))
+        {
+            orientation = o.Value;
+        }
+
+        switch (orientation)
+        {
+            case 2:
+                img.Mutate(x => x.Flip(FlipMode.Horizontal));
+                break;
+            case 3:
+                img.Mutate(x => x.Rotate(RotateMode.Rotate180));
+                break;
+            case 4:
+                img.Mutate(x => x.Flip(FlipMode.Vertical));
+                break;
+            case 5:
+                img.Mutate(x => { x.Flip(FlipMode.Vertical); x.Rotate(RotateMode.Rotate90); });
+                break;
+            case 6:
+                img.Mutate(x => x.Rotate(RotateMode.Rotate90));
+                break;
+            case 7:
+                img.Mutate(x => { x.Flip(FlipMode.Horizontal); x.Rotate(RotateMode.Rotate90); });
+                break;
+            case 8:
+                img.Mutate(x => x.Rotate(RotateMode.Rotate270));
+                break;
+            default:
+                break;
+        }
+
+        img.Metadata.ExifProfile = null;
+
         var encoder = new WebpEncoder()
         {
-            Quality = 75
+            Quality = 80
         };
 
         await img.SaveAsync(fullPath, encoder, cancellationToken);

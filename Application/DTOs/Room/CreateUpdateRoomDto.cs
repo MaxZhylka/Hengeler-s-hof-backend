@@ -3,7 +3,7 @@ namespace Hengeler.Application.DTOs.Room;
 public class CreateOrUpdateRoomDto
 {
   public Guid Id { get; set; }
-  public string RoomId { get; set; }
+  public required string RoomId { get; set; }
 
   public Guid? NameKey { get; set; }
   public Guid? DescriptionKey { get; set; }

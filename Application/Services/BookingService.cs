@@ -141,7 +141,8 @@ public class BookingService(string stripeApiKey, string successUrl, string cance
         {
           try
           {
-            if (session != null && session.Metadata.TryGetValue("UserId", out var userIdStr)
+            var s = session ?? throw new InvalidOperationException("Session is null");
+            if (session.Metadata.TryGetValue("UserId", out var userIdStr)
             && Guid.TryParse(userIdStr, out var userId))
             {
               User user = await _authService.GetUserByIdAsync(userId) ?? throw new Exception("User not found");

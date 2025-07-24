@@ -4,7 +4,7 @@ namespace Hengeler.Application.DTOs.Room;
 public class RoomDto
 {
   public Guid Id { get; set; }
-  public string RoomId { get; set; }
+  public required string RoomId { get; set; }
   public Guid NameKey { get; set; }
   public Guid DescriptionKey { get; set; }
   public Guid MaxGuestsKey { get; set; }
@@ -27,5 +27,5 @@ public class RoomDto
   public TimeOnly CheckOut { get; set; }
   public int Size { get; set; }
 
-  public List<Slide> Slides { get; set; }
+  public List<Slide> Slides { get; set; } = [];
 }

@@ -8,7 +8,7 @@ namespace Hengeler.Application.DTOs.Booking;
 public class CreateAdminBookingDto
 {
   [Required]
-  public string RoomId { get; set; }
+  public required string RoomId { get; set; }
   [Required]
   public Guid UserId { get; set; }
   public DateOnly StartDate { get; set; }

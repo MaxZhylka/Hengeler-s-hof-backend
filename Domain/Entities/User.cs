@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using Hengeler.Domain.Enums;
 
 namespace Hengeler.Domain.Entities
@@ -7,7 +8,7 @@ namespace Hengeler.Domain.Entities
   public class User
   {
     public Guid Id { get; set; }
-    public string Username { get; set; }
+    public required string Username { get; set; }
     public Roles Role { get; set; }
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
@@ -16,6 +17,7 @@ namespace Hengeler.Domain.Entities
     public string? PasswordHash { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [SetsRequiredMembers]
     public User(Guid id, string username, string? email = null, Roles role = Roles.User, bool socialLogin = false, string? phoneNumber = null, string? passwordHash = null, string? profilePictureUrl = null)
     {
       Id = id;

@@ -5,6 +5,8 @@ using Hengeler.Domain.Interfaces;
 using Hengeler.Domain.Services;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using SixLabors.ImageSharp.Processing;
 
 namespace Hengeler.Application.Services;
 
@@ -230,26 +232,63 @@ public class SlideService(
       }
     }
   }
-      private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
+  private async Task<string> SaveImageAsync(IFormFile image, CancellationToken cancellationToken)
+  {
+    var imageName = $"{Guid.NewGuid()}.webp";
+    var imagePath = Path.Combine(_storagePath, "images", "slides");
+
+    if (!Directory.Exists(imagePath))
+      Directory.CreateDirectory(imagePath);
+
+    var fullPath = Path.Combine(imagePath, imageName);
+
+    using var imageStream = image.OpenReadStream();
+    using var img = await Image.LoadAsync(imageStream, cancellationToken);
+
+    var exif = img.Metadata.ExifProfile;
+    ushort? orientation = null;
+
+    if (exif != null && exif.TryGetValue(ExifTag.Orientation, out IExifValue<ushort>? o))
     {
-        var imageName = $"{Guid.NewGuid()}.webp";
-        var imagePath = Path.Combine(_storagePath, "images", "slides");
-
-        if (!Directory.Exists(imagePath))
-            Directory.CreateDirectory(imagePath);
-
-        var fullPath = Path.Combine(imagePath, imageName);
-
-        using var imageStream = image.OpenReadStream();
-        using var img = await Image.LoadAsync(imageStream, cancellationToken);
-
-        var encoder = new WebpEncoder()
-        {
-            Quality = 75
-        };
-
-        await img.SaveAsync(fullPath, encoder, cancellationToken);
-
-        return $"/images/slides/{imageName}";
+      orientation = o.Value;
     }
+
+    switch (orientation)
+    {
+      case 2:
+        img.Mutate(x => x.Flip(FlipMode.Horizontal));
+        break;
+      case 3:
+        img.Mutate(x => x.Rotate(RotateMode.Rotate180));
+        break;
+      case 4:
+        img.Mutate(x => x.Flip(FlipMode.Vertical));
+        break;
+      case 5:
+        img.Mutate(x => { x.Flip(FlipMode.Vertical); x.Rotate(RotateMode.Rotate90); });
+        break;
+      case 6:
+        img.Mutate(x => x.Rotate(RotateMode.Rotate90));
+        break;
+      case 7:
+        img.Mutate(x => { x.Flip(FlipMode.Horizontal); x.Rotate(RotateMode.Rotate90); });
+        break;
+      case 8:
+        img.Mutate(x => x.Rotate(RotateMode.Rotate270));
+        break;
+      default:
+        break;
+    }
+
+    img.Metadata.ExifProfile = null;
+
+    var encoder = new WebpEncoder()
+    {
+      Quality = 80
+    };
+
+    await img.SaveAsync(fullPath, encoder, cancellationToken);
+
+    return $"/images/slides/{imageName}";
+  }
 }
